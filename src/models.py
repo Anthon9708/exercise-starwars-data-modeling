@@ -1,33 +1,55 @@
-import os
-import sys
 from sqlalchemy.orm import declarative_base, Mapped, mapped_column, relationship
-from sqlalchemy import create_engine, String, ForeignKey
+from sqlalchemy import ForeignKey
 from eralchemy2 import render_er
 
 Base = declarative_base()
 
-class Person(Base):
-    __tablename__ = 'person'
-    # Here we define columns for the table person
-    # Notice that each column is also a normal Python instance attribute.
+class User(Base):
+    __tablename__ = 'users'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    email: Mapped[str] = mapped_column(nullable=False)
+    password: Mapped[str] = mapped_column(nullable=False)
+    first_name: Mapped[str] = mapped_column(nullable=False)
+    last_name: Mapped[str] = mapped_column(nullable=False)
+    subscription_date : Mapped[str] = mapped_column(nullable=False)
+
+    favorites = relationship("Favorite", back_populates="users")
+
+class Character(Base):
+    __tablename__ = 'characters'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    height: Mapped[int]
+    gender: Mapped[str] = mapped_column(nullable=False)
+    birth_year: Mapped[str] = mapped_column(nullable=False)
+    species: Mapped[str] = mapped_column(nullable=False)
+
+    favorites = relationship("Favorite", back_populates="characters")
+    
+class Planet(Base):
+    __tablename__ = 'planets'
+
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(nullable=False)
-    address: Mapped["Address"] = relationship(back_populates="person")
+    climate: Mapped[str] = mapped_column(nullable=False)
+    terrain: Mapped[str] = mapped_column(nullable=False)
+    population: Mapped[str] = mapped_column(nullable=False)
 
+    favorites = relationship("Favorite", back_populates="planets")
 
-class Address(Base):
-    __tablename__ = 'address'
-    # Here we define columns for the table address.
-    # Notice that each column is also a normal Python instance attribute.
+class Favorite(Base):
+    __tablename__ = 'favorites'
+
     id: Mapped[int] = mapped_column(primary_key=True)
-    street_name: Mapped[str]
-    street_number: Mapped[str]
-    post_code: Mapped[str] = mapped_column(nullable=False)
-    person_id: Mapped[int] = mapped_column(ForeignKey("person.id"))
-    person: Mapped["Person"] = relationship(back_populates="address")
+    user_id : Mapped[int] = mapped_column(ForeignKey('users.id'))
+    character_id : Mapped[int] = mapped_column(ForeignKey('characters.id'))
+    planet_id : Mapped[int] = mapped_column(ForeignKey('planets.id'))
 
-    def to_dict(self):
-        return {}
+    users = relationship("User" , back_populates="favorites")
+    characters = relationship("Character" , back_populates="favorites")
+    planets = relationship("Planet" , back_populates="favorites")
 
 ## Draw from SQLAlchemy base
 render_er(Base, 'diagram.png')
